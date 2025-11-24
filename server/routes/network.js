@@ -129,4 +129,14 @@ router.patch('/ap/:id/restart', async (req, res) => {
   }
 });
 
+// Smart Hybrid Load Balancing Routes
+const loadBalancerController = require('../controllers/loadBalancerController');
+const aiController = require('../controllers/aiController');
+
+// Trigger Load Balancer Engine
+router.post('/optimize', loadBalancerController.optimizeNetwork);
+
+// Get AI Prediction
+router.get('/ai/predict', aiController.getNetworkPrediction);
+
 module.exports = router;

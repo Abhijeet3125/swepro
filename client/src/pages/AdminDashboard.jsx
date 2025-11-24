@@ -13,12 +13,16 @@ const AdminDashboard = () => {
   const [metricsHistory, setMetricsHistory] = useState([]);
   const [selectedAP, setSelectedAP] = useState(null);
   const [restarting, setRestarting] = useState(false);
+  const [aiPrediction, setAiPrediction] = useState(null);
+  const [optimizing, setOptimizing] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchAIPrediction();
     const interval = setInterval(() => {
       fetchData();
       fetchMetrics();
+      fetchAIPrediction();
     }, 2000); // Poll every 2 seconds
     return () => clearInterval(interval);
   }, []);
@@ -70,6 +74,36 @@ const AdminDashboard = () => {
       });
     } catch (err) {
       console.error('Error fetching metrics', err);
+    }
+  };
+
+  const fetchAIPrediction = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://localhost:5000/api/network/ai/predict', { headers: { 'x-auth-token': token } });
+      setAiPrediction(res.data);
+    } catch (err) {
+      console.error('Error fetching AI prediction', err);
+    }
+  };
+
+  const handleOptimize = async () => {
+    setOptimizing(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post('http://localhost:5000/api/network/optimize', {}, { headers: { 'x-auth-token': token } });
+      
+      // Toast notification
+      const message = res.data.logs.join(', ');
+      alert(`✅ Optimization Complete: ${message}`);
+      
+      // Refresh dashboard
+      fetchData();
+      setOptimizing(false);
+    } catch (err) {
+      console.error('Error optimizing network', err);
+      alert('❌ Optimization failed');
+      setOptimizing(false);
     }
   };
 
@@ -145,6 +179,46 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
+      {/* AI Network Guardian Widget */}
+      {aiPrediction && (
+        <div className={`p-6 rounded-xl shadow-sm border ${
+          aiPrediction.risk === 'HIGH' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className={`p-3 rounded-full ${
+                aiPrediction.risk === 'HIGH' ? 'bg-red-100 animate-pulse' : 'bg-green-100'
+              }`}>
+                <Shield className={`w-6 h-6 ${
+                  aiPrediction.risk === 'HIGH' ? 'text-red-600' : 'text-green-600'
+                }`} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">AI Network Guardian</h3>
+                <p className={`text-sm ${
+                  aiPrediction.risk === 'HIGH' ? 'text-red-700 font-medium' : 'text-green-700'
+                }`}>
+                  {aiPrediction.risk === 'HIGH' && '⚠️ '}
+                  {aiPrediction.message}
+                </p>
+                {aiPrediction.confidence && (
+                  <p className="text-xs text-gray-500 mt-1">Confidence: {aiPrediction.confidence}%</p>
+                )}
+              </div>
+            </div>
+            {aiPrediction.risk === 'HIGH' && (
+              <button
+                onClick={handleOptimize}
+                disabled={optimizing}
+                className="flex items-center space-x-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Zap className="w-4 h-4" />
+                <span>{optimizing ? 'Optimizing...' : '⚡ Apply Pre-emptive Optimization'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {/* Network Heatmap Section */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">

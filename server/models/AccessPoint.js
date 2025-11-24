@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const AccessPointSchema = new mongoose.Schema({
   name: { type: String, required: true },
   location: { type: String, required: true },
+  zone: { 
+    type: String, 
+    enum: ['Academic', 'Cafeteria', 'Hostel', 'Library', 'General'], 
+    default: 'General' 
+  },
   status: { type: String, enum: ['Online', 'Offline'], default: 'Online' },
   load: {
     type: Number,
