@@ -4,7 +4,6 @@ exports.getNetworkPrediction = async (req, res) => {
   try {
     const currentHour = new Date().getHours();
     
-    // 1. Check Real-Time Congestion (The "Eyes")
     const accessPoints = await AccessPoint.find();
     let realTimeRisk = null;
 
@@ -24,11 +23,10 @@ exports.getNetworkPrediction = async (req, res) => {
       return res.json(realTimeRisk);
     }
 
-    // 2. Check Time-Based Patterns (The "Brain")
     const patterns = {
-      'Academic': { peakStart: 9, peakEnd: 17 },  // Classes: 9am - 5pm
-      'Cafeteria': { peakStart: 12, peakEnd: 14 }, // Lunch: 12pm - 2pm
-      'Hostel': { peakStart: 20, peakEnd: 23 }     // Night: 8pm - 11pm
+      'Academic': { peakStart: 9, peakEnd: 17 },
+      'Cafeteria': { peakStart: 12, peakEnd: 14 },
+      'Hostel': { peakStart: 20, peakEnd: 23 }
     };
 
     let highestRisk = { zone: 'General', risk: 'LOW', message: 'Network loads nominal. AI monitoring active.' };

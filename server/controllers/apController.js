@@ -13,10 +13,10 @@ class APController {
     this.policyCache = new Set();
     this.refreshPolicies();
     
-    // Refresh policies every 5 seconds
+    this.refreshPolicies();
+    
     setInterval(() => this.refreshPolicies(), 5000);
     
-    // Start the processing loop
     this.startProcessingLoop();
   }
 
@@ -24,28 +24,23 @@ class APController {
     try {
       const policies = await QoSPolicy.find({ isActive: true, priority: 'High' });
       this.policyCache = new Set(policies.map(p => p.name));
-      // console.log('QoS Policies Refreshed:', this.policyCache.size);
+      this.policyCache = new Set(policies.map(p => p.name));
     } catch (err) {
       console.error('Error refreshing policies:', err.message);
     }
   }
 
-  // Ingress Endpoint Logic
   async handleIngress(req, res) {
     try {
       const packet = req.body;
       
-      // 1. Determine Priority based on Cached Policies
       const isPriority = this.policyCache.has(packet.appType);
       packet.isPriority = isPriority;
 
-      // 2. Enqueue Logic
       if (isPriority) {
-        // Infinite Queue for Priority - NEVER DROP
         this.highPriorityQueue.push(packet);
         res.status(200).json({ status: 'Queued (High)' });
       } else {
-        // Congestion Control for Normal Traffic
         if (this.normalQueue.length >= this.MAX_QUEUE_SIZE) {
           this.generalDropCount++;
           return res.status(503).json({ status: 'Dropped (Congestion)' });
@@ -59,13 +54,11 @@ class APController {
     }
   }
 
-  // Helper to check priority (Now synchronous using cache)
   checkPriority(appType) {
     return this.policyCache.has(appType);
   }
 
   startProcessingLoop() {
-    // Run every 60ms (slower than ingress to cause backlog)
     setInterval(async () => {
       this.processNextPacket();
     }, 60);
@@ -74,7 +67,6 @@ class APController {
   async processNextPacket() {
     let packet = null;
 
-    // Strict Priority Queuing: Always empty High Priority first
     if (this.highPriorityQueue.length > 0) {
       packet = this.highPriorityQueue.shift();
     } else if (this.normalQueue.length > 0) {
@@ -83,11 +75,8 @@ class APController {
 
     if (packet) {
       try {
-        // Forward to Receiver
         await axios.post('http://localhost:5000/api/simulation/receive', packet);
       } catch (error) {
-        // If receiver is down, we might drop or retry. For sim, we drop.
-        // console.error('Forwarding failed', error.message);
       }
     }
   }
@@ -104,5 +93,4 @@ class APController {
   }
 }
 
-// Export a singleton instance
 module.exports = new APController();

@@ -6,17 +6,14 @@ const runLoadBalancer = async () => {
   const logs = [];
   const zones = {};
 
-  // 1. Group APs by Zone
   accessPoints.forEach(ap => {
     if (!zones[ap.zone]) zones[ap.zone] = [];
     zones[ap.zone].push(ap);
   });
 
-  // 2. Iterate through each zone
   for (const [zone, aps] of Object.entries(zones)) {
-    if (aps.length < 2) continue; // Need at least 2 APs to balance
+    if (aps.length < 2) continue;
 
-    // Find Max and Min Load APs
     let maxAp = aps[0];
     let minAp = aps[0];
 
@@ -25,27 +22,22 @@ const runLoadBalancer = async () => {
       if (ap.activeClients < minAp.activeClients) minAp = ap;
     });
 
-    // Calculate Difference
     const loadDiff = maxAp.activeClients - minAp.activeClients;
 
-    // 3. Threshold Check (Diff > 20)
     if (loadDiff > 20) {
       const clientsToMove = Math.floor(loadDiff / 2);
 
-      // Move Clients
       maxAp.activeClients -= clientsToMove;
       minAp.activeClients += clientsToMove;
 
-      // Update DB
       await maxAp.save();
       await minAp.save();
 
-      // Log Event
       const logMessage = `Rebalanced ${zone}: Moved ${clientsToMove} clients from ${maxAp.name} to ${minAp.name}`;
       logs.push(logMessage);
 
       await EventLog.create({
-        type: 'Warning', // Using Warning to highlight the action
+        type: 'Warning',
         message: logMessage,
         source: 'Load Balancer'
       });

@@ -8,7 +8,6 @@ class ReceiverController {
     this.lastPriorityPacketTime = 0;
   }
 
-  // Endpoint: POST /api/simulation/receive
   receivePacket(req, res) {
     const packet = req.body;
     const latency = Date.now() - packet.timestamp;
@@ -25,26 +24,19 @@ class ReceiverController {
     res.status(200).json({ status: 'Received' });
   }
 
-  // Endpoint: GET /api/simulation/metrics
   getMetrics(req, res) {
-    // Check for stale priority traffic (if no priority packets for > 3 seconds)
     if (Date.now() - this.lastPriorityPacketTime > 3000) {
       this.priorityHistory = [];
     }
 
-    // Calculate Averages
     let avgPriority = this.calculateAverage(this.priorityHistory);
     const avgGeneral = this.calculateAverage(this.generalHistory);
     
-    // Get Drop Counts from AP Controller
     const drops = apController.resetDropCounts();
     
-    // Calculate Split Packet Loss
     let priorityLoss = drops.priority > 0 ? ((drops.priority / (drops.priority + 20)) * 100).toFixed(1) : 0;
     const generalLoss = drops.general > 0 ? ((drops.general / (drops.general + 20)) * 100).toFixed(1) : 0;
 
-    // BASELINE SYNC: If no priority traffic (no QoS active), mirror General metrics
-    // This ensures the chart lines overlap when no policy is set.
     if (this.priorityHistory.length === 0) {
       avgPriority = avgGeneral;
       priorityLoss = generalLoss;

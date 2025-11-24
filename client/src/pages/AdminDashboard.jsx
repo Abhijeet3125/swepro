@@ -23,7 +23,7 @@ const AdminDashboard = () => {
       fetchData();
       fetchMetrics();
       fetchAIPrediction();
-    }, 2000); // Poll every 2 seconds
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
@@ -56,11 +56,9 @@ const AdminDashboard = () => {
   const fetchMetrics = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Call the new Simulation Metrics Endpoint
       const res = await axios.get('http://localhost:5000/api/simulation/metrics', { headers: { 'x-auth-token': token } });
       
       setMetricsHistory(prev => {
-        // Map the new fields: priorityLatency, generalLatency, packetLoss
         const newPoint = {
           time: new Date(res.data.timestamp).toLocaleTimeString(),
           priorityLatency: res.data.priorityLatency,
@@ -70,7 +68,7 @@ const AdminDashboard = () => {
           jitter: res.data.jitter
         };
         const newHistory = [...prev, newPoint];
-        return newHistory.slice(-20); // Keep last 20 points
+        return newHistory.slice(-20);
       });
     } catch (err) {
       console.error('Error fetching metrics', err);
@@ -93,11 +91,9 @@ const AdminDashboard = () => {
       const token = localStorage.getItem('token');
       const res = await axios.post('http://localhost:5000/api/network/optimize', {}, { headers: { 'x-auth-token': token } });
       
-      // Toast notification
       const message = res.data.logs.join(', ');
       alert(`✅ Optimization Complete: ${message}`);
       
-      // Refresh dashboard
       fetchData();
       setOptimizing(false);
     } catch (err) {
@@ -153,13 +149,11 @@ const AdminDashboard = () => {
   const handleRestartAP = async (apId) => {
     setRestarting(true);
     
-    // Simulate 2-second delay
     setTimeout(async () => {
       try {
         const token = localStorage.getItem('token');
         await axios.patch(`http://localhost:5000/api/network/ap/${apId}/restart`, {}, { headers: { 'x-auth-token': token } });
         
-        // Close modal and refresh
         setSelectedAP(null);
         setRestarting(false);
         fetchData();
@@ -179,7 +173,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-8">
-      {/* AI Network Guardian Widget */}
       {aiPrediction && (
         <div className={`p-6 rounded-xl shadow-sm border ${
           aiPrediction.risk === 'HIGH' ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
@@ -220,7 +213,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Load Balancer Logs Section */}
       {logs.filter(log => log.source === 'Load Balancer').length > 0 && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
@@ -247,7 +239,6 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Network Heatmap Section */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900 flex items-center">
@@ -285,7 +276,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* AP Details Modal */}
       {selectedAP && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setSelectedAP(null)}>
           <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
