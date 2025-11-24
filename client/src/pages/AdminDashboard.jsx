@@ -219,6 +219,34 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Load Balancer Logs Section */}
+      {logs.filter(log => log.source === 'Load Balancer').length > 0 && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <Zap className="w-5 h-5 mr-2 text-amber-600" />
+            Load Balancer Operations
+          </h3>
+          <div className="space-y-2">
+            {logs
+              .filter(log => log.source === 'Load Balancer')
+              .slice(0, 5)
+              .map((log, idx) => (
+                <div key={idx} className="flex items-start space-x-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <Zap className="w-4 h-4 text-amber-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{log.message}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
+
       {/* Network Heatmap Section */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">

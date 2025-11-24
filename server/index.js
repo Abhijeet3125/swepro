@@ -38,4 +38,17 @@ app.listen(PORT, () => {
   
   // Start the new Traffic Generator
   trafficGenerator.start();
+
+  // Start Automatic Load Balancer (Runs every 10 seconds)
+  const loadBalancerController = require('./controllers/loadBalancerController');
+  setInterval(async () => {
+    try {
+      const logs = await loadBalancerController.runLoadBalancer();
+      if (logs.length > 0) {
+        console.log('🔄 Auto-Rebalanced:', logs);
+      }
+    } catch (err) {
+      console.error('Auto-Rebalance Error:', err.message);
+    }
+  }, 10000);
 });

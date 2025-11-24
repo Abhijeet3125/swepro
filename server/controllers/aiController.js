@@ -1,8 +1,30 @@
-exports.getNetworkPrediction = (req, res) => {
+const AccessPoint = require('../models/AccessPoint');
+
+exports.getNetworkPrediction = async (req, res) => {
   try {
     const currentHour = new Date().getHours();
     
-    // Define critical zones and their peak hours
+    // 1. Check Real-Time Congestion (The "Eyes")
+    const accessPoints = await AccessPoint.find();
+    let realTimeRisk = null;
+
+    for (const ap of accessPoints) {
+      if (ap.activeClients > 80) {
+        realTimeRisk = {
+          zone: ap.zone,
+          risk: 'HIGH',
+          message: `CRITICAL: ${ap.name} is overloaded (${ap.activeClients} clients). Immediate optimization recommended.`,
+          confidence: 0.98
+        };
+        break; 
+      }
+    }
+
+    if (realTimeRisk) {
+      return res.json(realTimeRisk);
+    }
+
+    // 2. Check Time-Based Patterns (The "Brain")
     const patterns = {
       'Academic': { peakStart: 9, peakEnd: 17 },  // Classes: 9am - 5pm
       'Cafeteria': { peakStart: 12, peakEnd: 14 }, // Lunch: 12pm - 2pm
@@ -11,17 +33,15 @@ exports.getNetworkPrediction = (req, res) => {
 
     let highestRisk = { zone: 'General', risk: 'LOW', message: 'Network loads nominal. AI monitoring active.' };
 
-    // Check each zone against current time
     for (const [zone, time] of Object.entries(patterns)) {
       if (currentHour >= time.peakStart && currentHour <= time.peakEnd) {
-        // Found a high-risk zone
         highestRisk = {
           zone: zone,
           risk: 'HIGH',
-          message: `High congestion predicted in ${zone} Zone.`,
-          confidence: (0.85 + Math.random() * 0.1).toFixed(2) // Mock confidence 85-95%
+          message: `High congestion predicted in ${zone} Zone based on time patterns.`,
+          confidence: (0.85 + Math.random() * 0.1).toFixed(2)
         };
-        break; // Prioritize the first critical zone found
+        break;
       }
     }
 
