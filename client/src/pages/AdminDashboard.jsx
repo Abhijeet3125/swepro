@@ -52,10 +52,20 @@ const AdminDashboard = () => {
   const fetchMetrics = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:5000/api/network/metrics', { headers: { 'x-auth-token': token } });
+      // Call the new Simulation Metrics Endpoint
+      const res = await axios.get('http://localhost:5000/api/simulation/metrics', { headers: { 'x-auth-token': token } });
       
       setMetricsHistory(prev => {
-        const newHistory = [...prev, { ...res.data, time: new Date(res.data.timestamp).toLocaleTimeString() }];
+        // Map the new fields: priorityLatency, generalLatency, packetLoss
+        const newPoint = {
+          time: new Date(res.data.timestamp).toLocaleTimeString(),
+          priorityLatency: res.data.priorityLatency,
+          generalLatency: res.data.generalLatency,
+          priorityPacketLoss: res.data.priorityPacketLoss,
+          generalPacketLoss: res.data.generalPacketLoss,
+          jitter: res.data.jitter
+        };
+        const newHistory = [...prev, newPoint];
         return newHistory.slice(-20); // Keep last 20 points
       });
     } catch (err) {
@@ -287,9 +297,20 @@ const AdminDashboard = () => {
           </div>
           <div className="p-3 bg-gray-50 rounded">
             <p className="text-xs text-gray-500">Packet Loss</p>
-            <p className="text-lg font-bold text-gray-800">
-              {metricsHistory.length > 0 ? metricsHistory[metricsHistory.length - 1].packetLoss : 0}%
-            </p>
+            <div className="flex justify-center space-x-4">
+              <div className="text-center">
+                <span className="block text-xs text-green-600 font-bold">Prio</span>
+                <span className="text-sm font-bold text-gray-800">
+                  {metricsHistory.length > 0 ? metricsHistory[metricsHistory.length - 1].priorityPacketLoss : 0}%
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="block text-xs text-gray-500 font-bold">Gen</span>
+                <span className="text-sm font-bold text-gray-800">
+                  {metricsHistory.length > 0 ? metricsHistory[metricsHistory.length - 1].generalPacketLoss : 0}%
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

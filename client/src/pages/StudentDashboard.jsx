@@ -40,6 +40,19 @@ const StudentDashboard = () => {
 
   const handleAddDevice = async (e) => {
     e.preventDefault();
+    
+    // Client-side Validation
+    if (devices.length >= 2) {
+      alert('You can only register up to 2 devices.');
+      return;
+    }
+
+    const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+    if (!macRegex.test(newDevice.macAddress)) {
+      alert('Invalid MAC address format (e.g., 00:1A:2B:3C:4D:5E)');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { 'x-auth-token': token } };
@@ -48,7 +61,8 @@ const StudentDashboard = () => {
       fetchData();
     } catch (err) {
       console.error(err);
-      alert('Error adding device');
+      // Display server error message if available
+      alert(err.response?.data?.msg || 'Error adding device');
     }
   };
 

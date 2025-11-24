@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const { simulateNetworkTraffic } = require('./utils/networkSimulation');
+const trafficGenerator = require('./utils/trafficGenerator');
 
 dotenv.config();
 
@@ -26,6 +26,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/devices', require('./routes/devices'));
 app.use('/api/tickets', require('./routes/tickets'));
 app.use('/api/network', require('./routes/network'));
+app.use('/api/simulation', require('./routes/simulation'));
 
 app.get('/', (req, res) => {
   res.send('Smart Campus Wi-Fi API is running');
@@ -35,8 +36,6 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
   
-  // Start Network Simulation (runs every 5 seconds)
-  setInterval(() => {
-    simulateNetworkTraffic();
-  }, 5000);
+  // Start the new Traffic Generator
+  trafficGenerator.start();
 });

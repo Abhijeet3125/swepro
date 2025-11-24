@@ -7,6 +7,18 @@ const Device = require('../models/Device');
 router.post('/', auth, async (req, res) => {
   const { macAddress, deviceName } = req.body;
   try {
+    // 1. Check Device Limit (Max 2)
+    const deviceCount = await Device.countDocuments({ owner: req.user.id });
+    if (deviceCount >= 2) {
+      return res.status(400).json({ msg: 'Maximum device limit reached (2 devices)' });
+    }
+
+    // 2. Validate MAC Address Format
+    const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+    if (!macRegex.test(macAddress)) {
+      return res.status(400).json({ msg: 'Invalid MAC address format (XX:XX:XX:XX:XX:XX)' });
+    }
+
     const newDevice = new Device({
       macAddress,
       deviceName,
